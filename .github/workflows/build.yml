@@ -15,7 +15,7 @@ jobs:
 
       - name: Get APNIC data
         run: |
-          curl 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' -o apnic-data.txt
+          curl --retry 3 --retry-delay 6 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' -o apnic-data.txt
           grep '|CN|ipv4|' apnic-data.txt | awk -F '|' '{ printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > ipv4-apnic.txt
           grep '|CN|ipv6|' apnic-data.txt | cut -d '|' -f '4,5' | tr '|' '/' > ipv6-apnic.txt
           ls *.txt
