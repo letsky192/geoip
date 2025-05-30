@@ -1,4 +1,4 @@
-自用，仅包含`cn`、`private`、`cloudflare`、`telegram`。
+自用，包含 4 个类别：`cn`、`private`、`cloudflare`、`telegram`。
 
 `cn`数据来自
 * [http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest](http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest)

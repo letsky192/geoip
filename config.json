@@ -83,12 +83,23 @@
       "action": "output",
       "args": {
         "outputName": "geoip.dat",
+        "outputDir": "./publish",
         "wantedList": ["cloudflare", "cn", "private", "telegram"]
       }
     },
     {
       "type": "text",
-      "action": "output"
+      "action": "output",
+      "args": {
+        "outputDir": "./publish/text"
+      }
+    },
+    {
+      "type": "mihomoMRS",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish/mrs"
+      }
     }
   ]
 }

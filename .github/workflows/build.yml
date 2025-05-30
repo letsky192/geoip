@@ -2,7 +2,7 @@ name: Build geoip files
 on:
   workflow_dispatch:
   schedule:
-    - cron: "20 3,22 * * *"
+    - cron: "20 5,22 * * *"
 
 jobs:
   build:
@@ -32,16 +32,10 @@ jobs:
 
       - name: Generate sha256 checksum for dat files
         run: |
-          cd ./output/dat || exit 1
+          cd ./publish || exit 1
           for name in $(ls *.dat); do
             sha256sum ${name} > ./${name}.sha256sum
           done
-
-      - name: Move files to publish directory
-        run: |
-          mkdir -p publish
-          mv ./output/dat/*.dat ./output/dat/*.sha256sum ./publish/
-          cp -fpPR ./output/text ./publish
 
       - name: Git push assets to "release" branch
         run: |
