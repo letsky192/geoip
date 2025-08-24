@@ -39,7 +39,8 @@
       "action": "output",
       "args": {
         "outputDir": "./publish/text",
-        "outputExtension": ".txt"
+        "outputExtension": ".txt",
+        "excludedList": ["cn4", "cn6"]
       }
     },
     {
