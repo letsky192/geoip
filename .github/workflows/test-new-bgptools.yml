@@ -1,4 +1,4 @@
-name: Test cache apt+cargo
+name: Test new bgptools
 on:
   workflow_dispatch:
 
@@ -21,6 +21,7 @@ jobs:
 
       - name: Set variables
         run: |
+          echo "IP4UPSTREAM=http://archive.routeviews.org/route-views2/bgpdata" >> $GITHUB_ENV
           echo "IP6UPSTREAM=http://archive.routeviews.org/route-views6/bgpdata" >> $GITHUB_ENV
           echo "MONTH6=$(date -u +%Y.%m)" >> $GITHUB_ENV
           echo "release_name=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
@@ -32,11 +33,10 @@ jobs:
 
       - name: Fetch bgp data
         run: |
-          curl -f --retry 3 --retry-delay 4 -o rib.bz2 "http://archive.routeviews.org/dnszones/rib.bz2"
+          LATEST4=$(curl -sL ${{ env.IP4UPSTREAM }}/${{ env.MONTH6 }}/RIBS|html2text|grep bz2|awk '{print $3}'|tail -n 1)
+          curl -f --retry 3 --retry-delay 4 -o rib.bz2 "$IP6UPSTREAM/$MONTH6/RIBS/$LATEST4"
           LATEST6=$(curl -sL ${{ env.IP6UPSTREAM }}/${{ env.MONTH6 }}/RIBS|html2text|grep bz2|awk '{print $3}'|tail -n 1)
-          TAG_NAME=$(echo ${LATEST6}|awk '{gsub("(rib.|.bz2)",""); print $1}')
           curl -f --retry 3 --retry-delay 4 -o rib6.bz2 "$IP6UPSTREAM/$MONTH6/RIBS/$LATEST6"
-          echo "RELEASE_NAME=${TAG_NAME}" >> $GITHUB_ENV
 
       - name: Dump v4 bgp date
         if: ${{ false }}
@@ -54,8 +54,8 @@ jobs:
 
       - name: Generate China IP list
         run: |
-          cat cnasn.list | xargs bgptools -b rib.bz2 | ./geoip merge > cn4.txt
-          cat cnasn.list | xargs bgptools -b rib6.bz2 | ./geoip merge > cn6.txt
+          cat cnasn.list | xargs bgptools -b rib.txt | ./geoip merge > cn4.txt
+          cat cnasn.list | xargs bgptools -b rib6.txt | ./geoip merge > cn6.txt
           bgptools -b rib.txt 45102 | ./geoip merge > AS45102-ipv4.txt
           bgptools -b rib6.txt 45102 | ./geoip merge > AS45102-ipv6.txt
           ls
