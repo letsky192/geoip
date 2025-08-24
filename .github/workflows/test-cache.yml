@@ -12,22 +12,23 @@ jobs:
 
       - uses: taiki-e/cache-cargo-install-action@v2
         with:
-          tool: bgptools@0.0.3
+          tool: bgptools@0.1.1
 
       - name: Get geoip-cli
         run: |
           curl -f --retry 3 --retry-delay 4 -o geoip -L 'https://github.com/letsky192/geoip/releases/latest/download/geoip-linux-amd64-v3'
           chmod u+x ./geoip
-          curl -f --retry 3 --retry-delay 4 -o config1.json 'https://raw.githubusercontent.com/letsky192/geoip/main/config1.json'
-          curl -f --retry 3 --retry-delay 4 -o config2.json 'https://raw.githubusercontent.com/letsky192/geoip/main/config2.json'
 
       - name: Set variables
         run: |
           echo "IP6UPSTREAM=http://archive.routeviews.org/route-views6/bgpdata" >> $GITHUB_ENV
           echo "MONTH6=$(date -u +%Y.%m)" >> $GITHUB_ENV
+          echo "release_name=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
 
       - name: Generate AS table
-        run: curl -sSL https://bgp.potaroo.net/cidr/autnums.html | awk '-F[<>]' '{print $3,$5}' | grep '^AS' > asnames.txt
+        run: curl -sSL https://bgp.potaroo.net/cidr/autnums.html \
+          | awk '-F[<>]' '{print $3,$5}' | grep '^AS' \
+          | grep -P "CN\$" | grep -vPi "AS45102" | awk '{gsub(/AS/, ""); print $1}' > cnasn.list
 
       - name: Fetch bgp data
         run: |
@@ -38,12 +39,14 @@ jobs:
           echo "RELEASE_NAME=${TAG_NAME}" >> $GITHUB_ENV
 
       - name: Dump v4 bgp date
+        if: ${{ false }}
         run: |
           echo "running bgpdump ..."
           bgpdump -m -O rib.txt rib.bz2
           echo "finish bgpdump"
 
       - name: Dump v6 bgp date
+        if: ${{ false }}
         run: |
           echo "running bgpdump ..."
           bgpdump -m -O rib6.txt rib6.bz2
@@ -51,15 +54,13 @@ jobs:
 
       - name: Generate China IP list
         run: |
-          cat asnames.txt | grep -P "CN\$" | grep -vPi "AS45102" | awk '{gsub(/AS/, ""); print $1}' > cnasn.list
-          cat cnasn.list | xargs bgptools -b rib.txt | ./geoip merge > cn4.txt
-          cat cnasn.list | xargs bgptools -b rib6.txt | ./geoip merge > cn6.txt
+          cat cnasn.list | xargs bgptools -b rib.bz2 | ./geoip merge > cn4.txt
+          cat cnasn.list | xargs bgptools -b rib6.bz2 | ./geoip merge > cn6.txt
           bgptools -b rib.txt 45102 | ./geoip merge > AS45102-ipv4.txt
           bgptools -b rib6.txt 45102 | ./geoip merge > AS45102-ipv6.txt
           ls
-          echo "release_name=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
 
-      - name: Git push assets to "release3" branch
+      - name: Git push assets to "release4" branch
         run: |
           mkdir publish
           mv ./cn4.txt ./publish/cn4.txt
@@ -67,12 +68,11 @@ jobs:
           mv ./AS45102-ipv4.txt ./publish/AS45102-ipv4.txt
           mv ./AS45102-ipv6.txt ./publish/AS45102-ipv6.txt
           mv ./cnasn.list ./publish/cnasn.list
-          mv ./asnames.txt ./publish/asnames.txt
           cd publish
-          git init -b release3
+          git init -b release4
           git config --local user.name 'github-actions[bot]'
           git config --local user.email 'github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m '${{ env.release_name }}'
           git remote add origin 'https://${{ github.actor }}:${{ github.token }}@github.com/${{ github.repository }}.git'
-          git push -f -u origin release3
+          git push -f -u origin release4
