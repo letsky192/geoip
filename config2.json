@@ -1,7 +1,7 @@
 {
   "input": [
     {
-      "type": "text",
+      "type": "mihomoMRS",
       "action": "add",
       "args": {
         "name": "cn",
@@ -9,7 +9,7 @@
       }
     },
     {
-      "type": "text",
+      "type": "mihomoMRS",
       "action": "add",
       "args": {
         "name": "cn",
