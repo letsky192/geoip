@@ -20,7 +20,7 @@
       "type": "text",
       "action": "add",
       "args": {
-        "name": "as45102",
+        "name": "as45102-v4",
         "uri": "./AS45102-ipv4.txt"
       }
     },
@@ -28,7 +28,7 @@
       "type": "text",
       "action": "add",
       "args": {
-        "name": "as45102",
+        "name": "as45102-v6",
         "uri": "./AS45102-ipv6.txt"
       }
     }
