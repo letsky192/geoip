@@ -1,4 +1,4 @@
-name: Test cache apt
+name: Test cache apt+cargo
 on:
   workflow_dispatch:
 
@@ -10,9 +10,9 @@ jobs:
         with:
           packages: bgpdump html2text
 
-      - name: Install packages
-        run: |
-          cargo install --vers 0.0.3 bgptools
+      - uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: bgptools@0.0.3
 
       - name: Get geoip-cli
         run: |
@@ -57,16 +57,17 @@ jobs:
           bgptools -b rib.txt 45102 | ./geoip merge > AS45102-ipv4.txt
           bgptools -b rib6.txt 45102 | ./geoip merge > AS45102-ipv6.txt
           ls
+          echo "release_name=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
 
       - name: Git push assets to "release3" branch
-        if: ${{ false }}
         run: |
           mkdir publish
           mv ./cn4.txt ./publish/cn4.txt
           mv ./cn6.txt ./publish/cn6.txt
-          mv ./cn4.txt ./publish/AS45102-ipv4.txt
-          mv ./cn6.txt ./publish/AS45102-ipv6.txt
+          mv ./AS45102-ipv4.txt ./publish/AS45102-ipv4.txt
+          mv ./AS45102-ipv6.txt ./publish/AS45102-ipv6.txt
           mv ./cnasn.list ./publish/cnasn.list
+          mv ./asnames.txt ./publish/asnames.txt
           cd publish
           git init -b release3
           git config --local user.name 'github-actions[bot]'
