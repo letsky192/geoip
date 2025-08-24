@@ -4,16 +4,8 @@
       "type": "text",
       "action": "add",
       "args": {
-        "name": "cn4",
-        "uri": "./cn4.txt"
-      }
-    },
-    {
-      "type": "text",
-      "action": "add",
-      "args": {
-        "name": "cn6",
-        "uri": "./cn6.txt"
+        "name": "cn",
+        "uri": "./publish/mrs/cn4.mrs"
       }
     },
     {
@@ -21,15 +13,7 @@
       "action": "add",
       "args": {
         "name": "cn",
-        "uri": "./cn4.txt"
-      }
-    },
-    {
-      "type": "text",
-      "action": "add",
-      "args": {
-        "name": "cn",
-        "uri": "./cn6.txt"
+        "uri": "./publish/mrs/cn6.mrs"
       }
     },
     {
@@ -37,7 +21,7 @@
       "action": "add",
       "args": {
         "name": "cloudflare",
-        "uri": "https://www.cloudflare.com/ips-v4"
+        "uri": "./cf-v4.txt"
       }
     },
     {
@@ -45,7 +29,7 @@
       "action": "add",
       "args": {
         "name": "cloudflare",
-        "uri": "https://www.cloudflare.com/ips-v6"
+        "uri": "./cf-v6.txt"
       }
     },
     {
@@ -53,7 +37,7 @@
       "action": "add",
       "args": {
         "name": "telegram",
-        "uri": "https://core.telegram.org/resources/cidr.txt"
+        "uri": "./tg.txt"
       }
     },
     {
