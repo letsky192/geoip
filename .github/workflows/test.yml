@@ -78,4 +78,4 @@ jobs:
           git add -A
           git commit -m '${{ env.release_name }}'
           git remote add origin 'https://${{ github.actor }}:${{ github.token }}@github.com/${{ github.repository }}.git'
-          git push -f -u origin release
+          git push -f -u origin test
