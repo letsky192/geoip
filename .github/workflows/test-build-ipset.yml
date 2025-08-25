@@ -66,9 +66,18 @@ jobs:
         run: |
           cd publish
           git init -b release
-          git config --local user.name 'github-actions[bot]'
-          git config --local user.email 'github-actions[bot]@users.noreply.github.com'
+          git config set user.name 'github-actions[bot]'
+          git config set user.email 'github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m '${{ env.release_name }}'
           git remote add origin 'https://${{ github.actor }}:${{ github.token }}@github.com/${{ github.repository }}.git'
           git push -f -u origin release
+
+      - name: Git push assets to mirror
+        run: |
+          cd publish
+          git config set user.name '${{ secrets.mirror_author }}'
+          git config set user.email '${{ secrets.mirror_email }}'
+          git commit --amend --reset-author -m '${{ env.release_name }}'
+          git remote add mirror '${{ secrets.mirror_repo }}'
+          git push -f -u mirror release:asset
