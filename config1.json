@@ -1,0 +1,54 @@
+{
+  "input": [
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "cn4",
+        "uri": "./cn4.txt"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "cn6",
+        "uri": "./cn6.txt"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "as45102",
+        "uri": "./AS45102-ipv4.txt"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "as45102",
+        "uri": "./AS45102-ipv6.txt"
+      }
+    }
+  ],
+  "output": [
+    {
+      "type": "text",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish/text",
+        "outputExtension": ".txt",
+        "excludedList": ["cn4", "cn6"]
+      }
+    },
+    {
+      "type": "mihomoMRS",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish/mrs"
+      }
+    }
+  ]
+}

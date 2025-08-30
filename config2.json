@@ -1,0 +1,72 @@
+{
+  "input": [
+    {
+      "type": "mihomoMRS",
+      "action": "add",
+      "args": {
+        "name": "cn",
+        "uri": "./publish/mrs/cn4.mrs"
+      }
+    },
+    {
+      "type": "mihomoMRS",
+      "action": "add",
+      "args": {
+        "name": "cn",
+        "uri": "./publish/mrs/cn6.mrs"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "cloudflare",
+        "uri": "./cf-ipv4.txt"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "cloudflare",
+        "uri": "./cf-ipv6.txt"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
+        "name": "telegram",
+        "uri": "./tg.txt"
+      }
+    },
+    {
+      "type": "private",
+      "action": "add"
+    }
+  ],
+  "output": [
+    {
+      "type": "v2rayGeoIPDat",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish"
+      }
+    },
+    {
+      "type": "text",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish/text",
+        "outputExtension": ".txt"
+      }
+    },
+    {
+      "type": "mihomoMRS",
+      "action": "output",
+      "args": {
+        "outputDir": "./publish/mrs"
+      }
+    }
+  ]
+}
