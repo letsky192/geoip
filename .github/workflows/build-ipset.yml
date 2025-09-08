@@ -1,0 +1,102 @@
+name: Build ip set
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4,10,22 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache html2text APT package
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: html2text
+
+      - name: Get upstream info
+        run: |
+          MONTH=$(date -u +'%Y.%m')
+          IP4_UPSTREAM="https://archive.routeviews.org/route-views2/bgpdata/$MONTH/RIBS"
+          IP6_UPSTREAM="https://archive.routeviews.org/route-views6/bgpdata/$MONTH/RIBS"
+          LATEST4=$(curl -f --retry 3 --retry-delay 4 -L "$IP4_UPSTREAM" \
+                    | html2text | grep -F '.bz2' | tail -n 1 | awk '{print $3}')
+          LATEST6=$(curl -f --retry 3 --retry-delay 4 -L "$IP6_UPSTREAM" \
+                    | html2text | grep -F '.bz2' | tail -n 1 | awk '{print $3}')
+          if [ $LATEST4 != $LATEST6 ]; then exit 1; fi
+          echo "rib4_url=$IP4_UPSTREAM/$LATEST4" >> $GITHUB_ENV
+          echo "rib6_url=$IP6_UPSTREAM/$LATEST6" >> $GITHUB_ENV
+          update_utc=$(date -d "${LATEST4:4:4}-${LATEST4:8:2}-${LATEST4:10:2} ${LATEST4:13:2}:${LATEST4:15:2}:00" +'%s')
+          update_cst=$(expr $update_utc + 28800)
+          update_cst=$(date -d "@$update_cst" +'%F %R UTC+8')
+          commit_msg="$update_cst\n\ncn4: $IP4_UPSTREAM/$LATEST4\ncn6: $IP6_UPSTREAM/$LATEST6"
+          echo "commit_msg=$commit_msg" >> $GITHUB_ENV
+
+      - name: Cahce bgptools cargo project
+        uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: bgptools@0.1.1
+
+      - name: Get geoip-cli tool
+        run: |
+          curl -f --retry 3 --retry-delay 4 -o geoip -L \
+              --url 'https://github.com/letsky192/geoip/releases/latest/download/geoip-linux-amd64-v3'
+          chmod u+x ./geoip
+          curl -f --retry 3 --retry-delay 4 -o config1.json \
+              --url 'https://raw.githubusercontent.com/letsky192/geoip/main/config1.json'
+          curl -f --retry 3 --retry-delay 4 -o config2.json \
+              --url 'https://raw.githubusercontent.com/letsky192/geoip/main/config2.json'
+
+      - name: Generate AS table
+        run: |
+          curl -f --retry 3 --retry-delay 4 -L 'https://bgp.potaroo.net/cidr/autnums.html' \
+              | awk -F '[<>]' '{print $3,$5}' \
+              | grep '^AS.*CN$' | awk '{print $1}' \
+              | tr -d 'AS' > cnasn.list
+
+      - name: Fetch bgp data and decompress
+        run: |
+          curl -f --retry 3 --retry-delay 4 -o rib4.bz2 -L "$rib4_url"
+          curl -f --retry 3 --retry-delay 4 -o rib6.bz2 -L "$rib6_url"
+          bzip2 -dk rib4.bz2
+          bzip2 -dk rib6.bz2
+
+      - name: Generate China CIDR from bgp data
+        run: |
+          cat cnasn.list | xargs bgptools -m ./rib4 | ./geoip merge > cn4.txt
+          cat cnasn.list | xargs bgptools -m ./rib6 | ./geoip merge > cn6.txt
+          bgptools -m ./rib4 45102 | ./geoip merge > AS45102-ipv4.txt
+          bgptools -m ./rib6 45102 | ./geoip merge > AS45102-ipv6.txt
+
+      - name: Fetch other ip set
+        run: |
+          curl -f --retry 3 --retry-delay 4 -o cf-ipv4.txt -L 'https://www.cloudflare.com/ips-v4'
+          curl -f --retry 3 --retry-delay 4 -o cf-ipv6.txt -L 'https://www.cloudflare.com/ips-v6'
+          curl -f --retry 3 --retry-delay 4 -o tg.txt -L 'https://core.telegram.org/resources/cidr.txt'
+
+      - name: Build mihomo rule set
+        run: |
+          mkdir publish publish/mrs publish/text
+          ./geoip convert -c config1.json
+          ./geoip convert -c config2.json
+          mv cn4.txt publish/text/cn4.txt
+          mv cn6.txt publish/text/cn6.txt
+
+      - name: Git push assets to "release" branch
+        run: |
+          cd publish
+          git init -b release
+          git config set user.name 'github-actions[bot]'
+          git config set user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A
+          echo -e "$commit_msg" | git commit -F -
+          git remote add origin 'https://${{ github.actor }}:${{ github.token }}@github.com/${{ github.repository }}.git'
+          git push -f origin release:release
+
+      - name: Git push assets to mirror
+        run: |
+          cd publish
+          git config set user.name '${{ secrets.mirror_author }}'
+          git config set user.email '${{ secrets.mirror_email }}'
+          echo -e "$commit_msg" | git commit --amend --reset-author -F -
+          git remote add mirror '${{ secrets.mirror_repo }}'
+          git push -f -q mirror release:ip > /dev/null 2>&1
